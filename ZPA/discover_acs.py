@@ -37,7 +37,7 @@ def retrieve_acs(token, base_url, cust_id):
         'Authorization': token
     }
 
-    response = requests.get(f"{base_url}/mgmtconfig/v1/admin/customers/{cust_id}/connector", headers=headers)
+    response = requests.get(f"{base_url}/mgmtconfig/v1/admin/customers/{cust_id}/connector?pagesize=500", headers=headers)
     response.raise_for_status()  # Raise an exception for HTTP errors
 
     acs = response.json().get('list', [])

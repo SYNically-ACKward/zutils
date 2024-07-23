@@ -1,4 +1,5 @@
 import json
+import csv
 import requests
 import getpass
 from pprint import pprint
@@ -55,7 +56,7 @@ def parse_and_output(acs):
     ]
 
     while True:
-        output = input("Would you like to print (1), export (2), or print & export (3) the results? Enter 'q' to quit.' [1]: \n").strip().lower()
+        output = input("Would you like to print (1), export as JSON (2), export as CSV (3), or print & export (4) the results? Enter 'q' to quit.' [1]: \n").strip().lower()
         print()
 
         if output == "1" or output == "":
@@ -69,11 +70,25 @@ def parse_and_output(acs):
             print()
 
         elif output == "3":
+            with open("output.csv", 'w', newline='') as out:
+                writer = csv.DictWriter(out, fieldnames=scrubbed_acs[0].keys())
+                writer.writeheader()
+                writer.writerows(scrubbed_acs)
+            print(f"File exported to {os.getcwd()}/output.csv")
+            print()
+
+        elif output == "4":
             pprint(scrubbed_acs)
             print()
             with open("output.json", 'w') as out:
                 json.dump(scrubbed_acs, out, indent=4)
             print(f"File exported to {os.getcwd()}/output.json")
+            print()
+            with open("output.csv", 'w', newline='') as out:
+                writer = csv.DictWriter(out, fieldnames=scrubbed_acs[0].keys())
+                writer.writeheader()
+                writer.writerows(scrubbed_acs)
+            print(f"File exported to {os.getcwd()}/output.csv")
             print()
 
         elif output == "q":

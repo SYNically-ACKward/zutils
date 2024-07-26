@@ -83,7 +83,17 @@ def parse_and_output(acs):
     print()
 
     while True:
-        output = input("Would you like to print (1), export as JSON (2), export as CSV (3), or print & export (4) the results? Enter 'q' to quit.' [1]: \n").strip().lower()
+        menu_data = [
+            ["Option", "Description"],
+            ["1", "Print the results"],
+            ["2", "Export as JSON"],
+            ["3", "Export as CSV"],
+            ["4", "Print & Export the results"],
+            ["q", "Quit"]
+        ]
+        menu_table = tabulate(menu_data, headers="firstrow", tablefmt="pretty")
+        print(menu_table)
+        output = input("Please choose an option [1]: ").strip().lower()
         print()
 
         if output == "1" or output == "":
@@ -136,8 +146,6 @@ def parse_and_output(acs):
             continue
 
 
-# def summarize_output(scrubbed_acs):
-
 def print_summary(scrubbed_acs):
     os_counter = Counter(ac['os'] for ac in scrubbed_acs)
     summary_data = [{"OS Version": os, "Count": count} for os, count in os_counter.items()]
@@ -149,10 +157,10 @@ def print_summary(scrubbed_acs):
 def print_upgrade_summary(scrubbed_acs):
     upgrade_needed = [
         ac for ac in scrubbed_acs 
-        if ac['os'] in OS_VERSIONS_NEEDING_UPGRADE or any(re.match(pattern, ac['os']) for pattern in OS_VERSION_PATTERNS)
+        if not ac['os'] or ac['os'] in OS_VERSIONS_NEEDING_UPGRADE or any(re.match(pattern, ac['os']) for pattern in OS_VERSION_PATTERNS)
     ]
     upgrade_count = Counter(ac['os'] for ac in upgrade_needed)
-    summary_data = [{"OS Version": os, "Count": count} for os, count in upgrade_count.items()]
+    summary_data = [{"OS Version": os if os else "Unknown", "Count": count} for os, count in upgrade_count.items()]
     
     # Highlight the text in red
     for entry in summary_data:

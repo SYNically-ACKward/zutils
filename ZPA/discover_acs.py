@@ -4,8 +4,13 @@ import requests
 import getpass
 from pprint import pprint
 import os
+import re
+from collections import Counter
+from tabulate import tabulate
 
 BASE_URL = "https://config.private.zscaler.com"
+OS_VERSIONS_NEEDING_UPGRADE = ["CentOS Linux 7"]
+OS_VERSION_PATTERNS = [r"Fedora Linux .*", r"Rocky Linux .*", r"CentOS Linux .*"]
 
 def get_customer_id():
     return input("Enter the Customer ID retrieved from the ZPA Admin Portal: ")
@@ -73,6 +78,10 @@ def parse_and_output(acs):
         for ac in acs
     ]
 
+    print_summary(scrubbed_acs)
+    print_upgrade_summary(scrubbed_acs)
+    print()
+
     while True:
         output = input("Would you like to print (1), export as JSON (2), export as CSV (3), or print & export (4) the results? Enter 'q' to quit.' [1]: \n").strip().lower()
         print()
@@ -125,6 +134,35 @@ def parse_and_output(acs):
         else:
             print("Invalid input. Please try again.")
             continue
+
+
+# def summarize_output(scrubbed_acs):
+
+def print_summary(scrubbed_acs):
+    os_counter = Counter(ac['os'] for ac in scrubbed_acs)
+    summary_data = [{"OS Version": os, "Count": count} for os, count in os_counter.items()]
+    summary_table = tabulate(summary_data, headers="keys", tablefmt="pretty")
+    print("\nSummary of OS Versions:")
+    print(summary_table)
+
+
+def print_upgrade_summary(scrubbed_acs):
+    upgrade_needed = [
+        ac for ac in scrubbed_acs 
+        if ac['os'] in OS_VERSIONS_NEEDING_UPGRADE or any(re.match(pattern, ac['os']) for pattern in OS_VERSION_PATTERNS)
+    ]
+    upgrade_count = Counter(ac['os'] for ac in upgrade_needed)
+    summary_data = [{"OS Version": os, "Count": count} for os, count in upgrade_count.items()]
+    
+    # Highlight the text in red
+    for entry in summary_data:
+        entry["OS Version"] = f"\033[91m{entry['OS Version']}\033[0m"
+        entry["Count"] = f"\033[91m{entry['Count']}\033[0m"
+    
+    summary_table = tabulate(summary_data, headers="keys", tablefmt="pretty")
+    print("\nSummary of OS Versions Needing Upgrade:")
+    print(summary_table)
+
 
 def main():
     base_url = BASE_URL

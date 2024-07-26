@@ -7,7 +7,7 @@ Requests ClientID, Client Secret and Customer ID as user input via interactive m
 
 Information output includes: App Connector Name, App Connector ID, App Connector Private IP Address, Runtime OS Version, App Connector Description
 
-Requirements: `pip install requests`
+Requirements: `pip install requests tabulate`
 Usage: Navigate to the directory in which you downloaded the script and run `python discover_acs.py`
 
 ## Misc/traffic_gen.sh

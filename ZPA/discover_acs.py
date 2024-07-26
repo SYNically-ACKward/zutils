@@ -66,6 +66,12 @@ def check_file_exists(file_path):
             return False
     return True
 
+
+def remove_ansi_escape_codes(text):
+    ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+    return ansi_escape.sub('', text)
+
+
 def parse_and_output(acs):
     scrubbed_acs = [
         {
@@ -89,6 +95,7 @@ def parse_and_output(acs):
             ["2", "Export as JSON"],
             ["3", "Export as CSV"],
             ["4", "Print & Export the results"],
+            ["5", "Output summary data tables to a file"],
             ["q", "Quit"]
         ]
         menu_table = tabulate(menu_data, headers="firstrow", tablefmt="pretty")
@@ -138,6 +145,20 @@ def parse_and_output(acs):
                 print(f"File exported to {os.getcwd()}/{csv_file_path}")
                 print()
 
+        elif output == "5":
+            summary_file_path = "summary_output.txt"
+            if check_file_exists(summary_file_path):
+                with open(summary_file_path, 'w') as out:
+                    summary_table = get_summary_table(scrubbed_acs)
+                    out.write("Summary of OS Versions:\n")
+                    out.write(summary_table + "\n\n")
+
+                    upgrade_summary_table = get_upgrade_summary_table(scrubbed_acs)
+                    clean_upgrade_summary_table = remove_ansi_escape_codes(upgrade_summary_table)
+                    out.write("Summary of OS Versions Needing Upgrade:\n")
+                    out.write(clean_upgrade_summary_table + "\n")
+                print(f"Summary data tables exported to {os.getcwd()}/{summary_file_path}")
+                print()
         elif output == "q":
             break
 
@@ -146,15 +167,18 @@ def parse_and_output(acs):
             continue
 
 
-def print_summary(scrubbed_acs):
+def get_summary_table(scrubbed_acs):
     os_counter = Counter(ac['os'] for ac in scrubbed_acs)
     summary_data = [{"OS Version": os, "Count": count} for os, count in os_counter.items()]
     summary_table = tabulate(summary_data, headers="keys", tablefmt="pretty")
+    return summary_table
+
+def print_summary(scrubbed_acs):
+    summary_table = get_summary_table(scrubbed_acs)
     print("\nSummary of OS Versions:")
     print(summary_table)
 
-
-def print_upgrade_summary(scrubbed_acs):
+def get_upgrade_summary_table(scrubbed_acs):
     upgrade_needed = [
         ac for ac in scrubbed_acs 
         if not ac['os'] or ac['os'] in OS_VERSIONS_NEEDING_UPGRADE or any(re.match(pattern, ac['os']) for pattern in OS_VERSION_PATTERNS)
@@ -168,6 +192,10 @@ def print_upgrade_summary(scrubbed_acs):
         entry["Count"] = f"\033[91m{entry['Count']}\033[0m"
     
     summary_table = tabulate(summary_data, headers="keys", tablefmt="pretty")
+    return summary_table
+
+def print_upgrade_summary(scrubbed_acs):
+    summary_table = get_upgrade_summary_table(scrubbed_acs)
     print("\nSummary of OS Versions Needing Upgrade:")
     print(summary_table)
 
